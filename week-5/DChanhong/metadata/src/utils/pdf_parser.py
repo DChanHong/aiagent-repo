@@ -27,7 +27,7 @@ class PDFTableParser:
         documents: List[Document] = []
         file_name = os.path.basename(file_path)
 
-        year_match = re.search(r"202\d", file_name)
+        year_match = re.search(r"20\d{2}", file_name)
         source_year = year_match.group() if year_match else "unknown"
 
         print(f"[{source_year}] 파싱 시작: {file_name}")

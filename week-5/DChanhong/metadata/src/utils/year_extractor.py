@@ -49,7 +49,7 @@ class YearExtractor:
 
     def extract(self, question: str) -> YearExtractionResult:
         # 1) 명시적 년도 (202x)
-        explicit_years = set(re.findall(r"(202\d)", question))
+        explicit_years = set(re.findall(r"(20\d{2})", question))
 
         # 2) 상대 표현
         relative_years = set()

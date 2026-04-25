@@ -1,21 +1,12 @@
 from fastapi import APIRouter, HTTPException
 
-from .schemas import QueryRequest, QueryResponse, IndexResponse
+from .schemas import QueryRequest, QueryResponse
 from .service import rag_service
 
 router = APIRouter(
     prefix="/api/v1/rag",
     tags=["RAG (Metadata Full: Dense+BM25+Rerank + Pre-filter)"],
 )
-
-
-@router.post("/index", response_model=IndexResponse)
-async def run_indexing():
-    """data/ 폴더의 PDF 를 읽어 벡터 DB + BM25 인덱스를 재생성합니다."""
-    result = await rag_service.run_indexing()
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    return result
 
 
 @router.post("/query", response_model=QueryResponse)

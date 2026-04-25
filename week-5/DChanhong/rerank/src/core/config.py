@@ -26,9 +26,10 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gemini-1.5-flash"
     RERANK_MODEL: str = "rerank-multilingual-v3.0"
 
-    # Paths (rerank/ 기준 상대 경로)
-    DATA_PATH: str = "data"
-    STORAGE_PATH: str = "./storage"
+    # 공용 ChromaDB (week-5/chroma_db) — 모든 버전이 공유
+    SHARED_DB_DIR: str = str((BASE_DIR.parent.parent / "chroma_db").resolve())
+    SHARED_COLLECTION: str = "medical_aid_unified"
+    SHARED_DATA_DIR: str = str((BASE_DIR.parent.parent / "data").resolve())
 
     model_config = SettingsConfigDict(
         env_file=(str(ENV_PATH), ".env"),

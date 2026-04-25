@@ -1,25 +1,23 @@
 import os
+from pathlib import Path
 import json
 from typing import List
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
 from src.core.config import settings, BASE_DIR
-from src.utils.pdf_parser import pdf_parser
 from .schemas import QueryRequest, QueryResponse, SourceDocument
 
 
 class BasicRAGService:
     """
     Basic RAG: Dense Retrieval (ChromaDB) + LLM 생성 만 수행.
-    Hybrid / Rerank / Metadata 버전은 별도 폴더에서 구현.
+    공용 ChromaDB (week-5/chroma_db, collection=medical_aid_unified) 를 읽기만 함.
+    인덱싱은 week-5/DChanhong/indexing.py 로 1회 수행.
     """
-
-    COLLECTION_NAME = "medical_aid_rag_basic"
 
     def __init__(self):
         self.embeddings = OpenAIEmbeddings(
@@ -37,59 +35,11 @@ class BasicRAGService:
         self._init_vector_store()
 
     def _init_vector_store(self):
-        storage_path = str((BASE_DIR / settings.STORAGE_PATH).resolve())
-        os.makedirs(storage_path, exist_ok=True)
-
         self.vector_store = Chroma(
-            persist_directory=storage_path,
+            persist_directory=settings.SHARED_DB_DIR,
             embedding_function=self.embeddings,
-            collection_name=self.COLLECTION_NAME,
+            collection_name=settings.SHARED_COLLECTION,
         )
-
-    async def run_indexing(self) -> dict:
-        """data/ 폴더의 모든 PDF 를 읽어서 벡터 DB 를 새로 만듭니다."""
-        if self.vector_store:
-            try:
-                self.vector_store.delete_collection()
-            except Exception as e:
-                print(f"[indexing] delete_collection 실패: {e}")
-            self._init_vector_store()
-
-        abs_data_path = (BASE_DIR / settings.DATA_PATH).resolve()
-        if not os.path.exists(abs_data_path):
-            return {"error": f"data 경로를 찾을 수 없습니다: {abs_data_path}"}
-
-        pdf_files = [f for f in os.listdir(abs_data_path) if f.endswith(".pdf")]
-        if not pdf_files:
-            return {"error": f"PDF 가 없습니다: {abs_data_path}"}
-
-        all_documents: List[Document] = []
-        for pdf_file in pdf_files:
-            docs = pdf_parser.parse_pdf(os.path.join(abs_data_path, pdf_file))
-            all_documents.extend(docs)
-
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            add_start_index=True,
-        )
-        chunks = splitter.split_documents(all_documents)
-
-        # 청크 고유 ID 부여 (source + page + start_index)
-        # 다년도 PDF 에서 내용이 동일해도 년도별로 구분되도록 하기 위함
-        for chunk in chunks:
-            src = chunk.metadata.get("source", "unknown")
-            page = chunk.metadata.get("page", "-")
-            start = chunk.metadata.get("start_index", 0)
-            chunk.metadata["chunk_id"] = f"{src}__p{page}__s{start}"
-
-        self.vector_store.add_documents(chunks)
-
-        return {
-            "status": "success",
-            "files_processed": pdf_files,
-            "total_chunks": len(chunks),
-        }
 
     async def get_answer(self, request: QueryRequest) -> QueryResponse:
         if not self.vector_store:
@@ -148,7 +98,7 @@ class BasicRAGService:
 
     async def run_evaluation(self) -> dict:
         """golden_dataset_v2.jsonl 을 읽어 Basic RAG 로 전체 답변 생성 → Ragas 입력용 파일 저장"""
-        input_file = (BASE_DIR / "data" / "golden_dataset_v2.jsonl").resolve()
+        input_file = Path(settings.SHARED_DATA_DIR) / "golden_dataset_v2.jsonl"
         base_output_dir = (BASE_DIR / "data" / "basic").resolve()
         os.makedirs(base_output_dir, exist_ok=True)
 

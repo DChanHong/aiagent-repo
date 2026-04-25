@@ -1,15 +1,14 @@
 import os
+from pathlib import Path
 import json
 from typing import List, Optional
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
 from src.core.config import settings, BASE_DIR
-from src.utils.pdf_parser import pdf_parser
 from src.utils.year_extractor import YearExtractor
 from .schemas import QueryRequest, QueryResponse, SourceDocument, FilterInfo
 
@@ -23,9 +22,9 @@ class MetadataRAGService:
       4) LLM 생성
 
     BM25·Rerank 없음 (기여도 분리 측정을 위해 pre-filter 만 추가).
+    인덱싱은 week-5/DChanhong/indexing.py 로 1회 수행.
     """
 
-    COLLECTION_NAME = "medical_aid_rag_metadata"
     FALLBACK_THRESHOLD_RATIO = 0.5  # 필터 결과가 k 의 절반 이하면 필터 해제
 
     def __init__(self):
@@ -47,56 +46,11 @@ class MetadataRAGService:
     # 초기화 / 인덱싱
     # ------------------------------------------------------------------
     def _init_vector_store(self):
-        storage_path = str((BASE_DIR / settings.STORAGE_PATH).resolve())
-        os.makedirs(storage_path, exist_ok=True)
         self.vector_store = Chroma(
-            persist_directory=storage_path,
+            persist_directory=settings.SHARED_DB_DIR,
             embedding_function=self.embeddings,
-            collection_name=self.COLLECTION_NAME,
+            collection_name=settings.SHARED_COLLECTION,
         )
-
-    async def run_indexing(self) -> dict:
-        if self.vector_store:
-            try:
-                self.vector_store.delete_collection()
-            except Exception as e:
-                print(f"[indexing] delete_collection 실패: {e}")
-            self._init_vector_store()
-
-        abs_data_path = (BASE_DIR / settings.DATA_PATH).resolve()
-        if not os.path.exists(abs_data_path):
-            return {"error": f"data 경로 없음: {abs_data_path}"}
-
-        pdf_files = [f for f in os.listdir(abs_data_path) if f.endswith(".pdf")]
-        if not pdf_files:
-            return {"error": f"PDF 없음: {abs_data_path}"}
-
-        all_documents: List[Document] = []
-        for pdf_file in pdf_files:
-            docs = pdf_parser.parse_pdf(os.path.join(abs_data_path, pdf_file))
-            all_documents.extend(docs)
-
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            add_start_index=True,
-        )
-        chunks = splitter.split_documents(all_documents)
-
-        # 청크 고유 ID (source + page + start_index)
-        for chunk in chunks:
-            src = chunk.metadata.get("source", "unknown")
-            page = chunk.metadata.get("page", "-")
-            start = chunk.metadata.get("start_index", 0)
-            chunk.metadata["chunk_id"] = f"{src}__p{page}__s{start}"
-
-        self.vector_store.add_documents(chunks)
-
-        return {
-            "status": "success",
-            "files_processed": pdf_files,
-            "total_chunks": len(chunks),
-        }
 
     # ------------------------------------------------------------------
     # 검색 + 생성
@@ -207,7 +161,7 @@ class MetadataRAGService:
     # 평가 (Ragas 입력용 JSONL 생성)
     # ------------------------------------------------------------------
     async def run_evaluation(self) -> dict:
-        input_file = (BASE_DIR / "data" / "golden_dataset_v2.jsonl").resolve()
+        input_file = Path(settings.SHARED_DATA_DIR) / "golden_dataset_v2.jsonl"
         base_output_dir = (BASE_DIR / "data" / "metadata").resolve()
         os.makedirs(base_output_dir, exist_ok=True)
 

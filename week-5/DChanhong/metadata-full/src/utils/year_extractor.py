@@ -31,7 +31,7 @@ class YearExtractor:
         self.reference_year = reference_year
 
     def extract(self, question: str) -> YearExtractionResult:
-        explicit_years = set(re.findall(r"(202\d)", question))
+        explicit_years = set(re.findall(r"(20\d{2})", question))
 
         relative_years = set()
         matched_kw = []
