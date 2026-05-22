@@ -3,7 +3,10 @@
 ## 프로젝트 링크
 
 - Repository: https://github.com/DChanHong/baseball-agent
+  - Agent 본체 코드(`AgentExecutor` 설정, Tool 정의, prompt 등)와 observability 관련 모듈이 모두 이 외부 repo에 있다.
+  - 본 README는 aiagent-repo 안의 제출용 요약본이고, 실제 실행 코드와 trace 샘플 JSON은 위 repository에서 확인한다.
 - 7주차 제출 README: https://github.com/DChanHong/baseball-agent/blob/main/README.md
+  - 7주차 Agent 구성(Tool 목록, 실행 흐름, 설치 방법)이 그대로 유지돼 있어 본 README의 "Agent 실행 흐름" 섹션과 함께 보면 충분하다.
 
 ## 구현한 Observability
 
@@ -46,7 +49,9 @@
 
 ## 정상 케이스 Trace 1: 일정 조회
 
-langsmith link : https://smith.langchain.com/public/d2bffe6d-b4b7-4305-8c38-7d0911513571/r
+LangSmith trace (public): https://smith.langchain.com/public/d2bffe6d-b4b7-4305-8c38-7d0911513571/r
+
+> 위 링크는 별도 로그인 없이 열람 가능한 public share link이다. 링크를 열면 좌측에 step tree(LLM call → `find_kbo_game` tool call → 최종 답변), 우측에 각 step의 input/output/latency가 표시된다. 아래 표는 그 trace를 요약한 것이므로 링크 접근이 어려운 경우 README만으로도 동일 정보를 확인할 수 있다.
 
 입력:
 
@@ -84,7 +89,9 @@ Trace 정보:
 
 ## 정상 케이스 Trace 2: 좌석 추천
 
-langsmith link : https://smith.langchain.com/public/abc17a63-9c35-4f63-9f4b-0fca47a54342/r
+LangSmith trace (public): https://smith.langchain.com/public/abc17a63-9c35-4f63-9f4b-0fca47a54342/r
+
+> 5단계 tool 호출이 직렬로 이어지는 trace이므로, 링크에서는 step tree가 깊게 펼쳐진다. 각 tool node를 클릭하면 argument와 observation 전문을 볼 수 있고, 우측 상단에서 전체 latency 23564ms와 token 사용량을 확인할 수 있다. 아래 표는 같은 정보를 한눈에 정리한 요약본이다.
 
 입력:
 
@@ -137,7 +144,9 @@ Trace 정보:
 2026년 2월 1일 롯데 좌석 추천해줘
 ```
 
-langsmith link : https://smith.langchain.com/public/a02885f9-982f-410d-a7db-e7818dc1f042/r
+LangSmith trace (public): https://smith.langchain.com/public/a02885f9-982f-410d-a7db-e7818dc1f042/r
+
+> 링크를 열면 `find_kbo_game` tool node의 output에 `ok=false`, `status=not_found`, `error.code=GAME_NOT_FOUND`가 그대로 노출돼 있다. 후속 tool node가 존재하지 않고 곧바로 최종 답변 node로 이어지므로, Agent가 실패를 감지한 뒤 추가 호출 없이 종료했음을 trace tree에서 시각적으로 확인할 수 있다.
 
 실행 요약:
 
@@ -186,17 +195,19 @@ Trace 정보:
 
 LangSmith trace와 별도로, 리뷰어가 repository 안에서 바로 확인할 수 있도록 실제 `/chat` 실행 결과를 JSON 샘플로 저장했다.
 
-| 항목 | 파일 |
-|------|------|
-| 인덱싱 상태 | `docs/observability/examples/index_status.json` |
-| 정상 일정 조회 run | `docs/observability/examples/normal_schedule_run.json` |
-| 정상 일정 조회 Tool 호출 | `docs/observability/examples/normal_schedule_tool_calls.json` |
-| 정상 좌석 추천 run | `docs/observability/examples/normal_seat_recommendation_run.json` |
-| 정상 좌석 추천 Tool 호출 | `docs/observability/examples/normal_seat_recommendation_tool_calls.json` |
-| 실패 케이스 run | `docs/observability/examples/failure_game_not_found_run.json` |
-| 실패 케이스 Tool 호출 | `docs/observability/examples/failure_game_not_found_tool_calls.json` |
-| 실행 요약 | `docs/observability/examples/summary.md` |
-| 전체 흐름 다이어그램 | `docs/observability/examples/flow.mmd` |
+> 아래 경로들은 모두 외부 repository(`https://github.com/DChanHong/baseball-agent`) 기준이다. 본 aiagent-repo에는 포함돼 있지 않으므로, 파일을 직접 열어보려면 외부 repo의 `docs/observability/examples/` 디렉터리로 이동해야 한다. 다만 각 파일의 핵심 내용은 본 README의 trace 표에 이미 요약돼 있어, 외부 파일을 열지 않아도 평가에 필요한 정보는 확인할 수 있다.
+
+| 항목 | 파일 | 포함 내용 요약 |
+|------|------|----------------|
+| 인덱싱 상태 | `docs/observability/examples/index_status.json` | FAISS index 준비 상태, document count(239), 카테고리별 문서 수, embedding 모델 이름 |
+| 정상 일정 조회 run | `docs/observability/examples/normal_schedule_run.json` | Trace 1의 session id, trace id, 입력, 최종 답변, 전체 latency, stop reason 등 run 단위 요약 |
+| 정상 일정 조회 Tool 호출 | `docs/observability/examples/normal_schedule_tool_calls.json` | Trace 1의 `find_kbo_game` 호출 argument, observation, latency raw 데이터 |
+| 정상 좌석 추천 run | `docs/observability/examples/normal_seat_recommendation_run.json` | Trace 2의 run 메타데이터 + 좌석 추천 최종 답변 본문 |
+| 정상 좌석 추천 Tool 호출 | `docs/observability/examples/normal_seat_recommendation_tool_calls.json` | Trace 2의 5개 Tool(`find_kbo_game`→`get_stadium_info`→`get_weather_context`→`search_baseball_knowledge`→`score_seat_candidates`) 각각의 argument와 observation 전문 |
+| 실패 케이스 run | `docs/observability/examples/failure_game_not_found_run.json` | 실패 trace의 run 메타데이터와 fallback 답변 |
+| 실패 케이스 Tool 호출 | `docs/observability/examples/failure_game_not_found_tool_calls.json` | `find_kbo_game`의 `status=not_found`, `error.code=GAME_NOT_FOUND` 응답 원본 |
+| 실행 요약 | `docs/observability/examples/summary.md` | 세 trace의 정량 지표(latency, step count, tool error count)를 표 형태로 요약 |
+| 전체 흐름 다이어그램 | `docs/observability/examples/flow.mmd` | Mermaid 형식의 Agent 실행 흐름도(입력 → Tool 분기 → 최종 답변) |
 
 인덱싱 결과:
 
