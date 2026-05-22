@@ -165,7 +165,12 @@ Trace 정보:
 
 - 예상한 흐름: 일정 조회는 `find_kbo_game`만 호출하고, 좌석 추천은 경기 확정 후 구장 정보, 날씨, RAG 검색, 좌석 점수화 순서로 진행해야 한다.
 - 실제 흐름: 일정 조회, 좌석 추천, 실패 케이스 모두 예상 흐름과 일치했다.
-- 잘 동작한 부분: 단일턴 좌석 추천에서도 `find_kbo_game`으로 경기를 확정한 뒤 필요한 Tool을 순서대로 호출했다. 실패 케이스에서는 불필요한 후속 Tool 호출 없이 fallback 답변으로 종료했다.
+- 누락된 Tool: 세 trace 모두에서 예상 흐름 대비 누락된 Tool은 없었다. 일정 조회와 실패 케이스는 단일 Tool만 필요한 흐름이라 후속 Tool 미호출이 정상 동작이고, 좌석 추천은 구장→날씨→RAG→점수화 5개 Tool이 모두 호출됐다.
+- Tool argument 구체성: `find_kbo_game`은 `team_query=롯데`, `date_query=다음주`처럼 사용자 발화의 모호한 표현도 그대로 인자로 전달돼 Tool 내부에서 날짜 범위로 정규화됐다. 좌석 추천 trace에서는 `score_seat_candidates`가 선호도, 날씨 context, 좌석 후보, 경기 정보를 모두 받아 점수화에 필요한 인자가 빠짐없이 전달됐다. 인자 부족으로 인한 재호출이나 빈 인자 호출은 관측되지 않았다.
+- 반복 호출 여부: 세 trace 모두에서 동일 Tool을 동일 인자로 다시 호출하는 불필요한 반복은 없었다. 좌석 추천 trace의 5단계도 각 Tool이 정확히 1회씩만 호출됐다.
+- Fallback 동작: 실패 케이스에서 `find_kbo_game`이 `status=not_found`, `error.code=GAME_NOT_FOUND`를 반환하자 Agent는 후속 Tool을 호출하지 않고 사용자에게 다른 날짜를 요청하는 답변으로 정상 종료(`stop reason=final_answer`)했다.
+- Latency 병목: 좌석 추천 trace의 tool latency 합계는 약 3141ms인데 전체 latency는 23564ms로, 차이의 대부분이 LLM reasoning 시간이다. Tool 단위로는 `get_weather_context` 2123ms와 `search_baseball_knowledge` 999ms가 컸다.
+- 답변 groundedness: 세 trace 모두 최종 답변이 직전 Tool observation 범위 내 정보로만 구성됐다. 좌석 추천 답변의 경기/구장/날씨/좌석 1순위는 각각 `find_kbo_game`, `get_stadium_info`, `get_weather_context`, `score_seat_candidates` observation에서 그대로 가져왔고, 가격이 크롤링 시점 기준이라는 한계 안내도 RAG 문서 근거 범위 안에 있다. Tool 결과를 벗어난 hallucination은 관측되지 않았다.
 - 개선할 부분: 좌석 추천 trace의 전체 latency 23564ms 중 tool latency 합계보다 LLM reasoning 시간이 더 크므로, prompt 축약이나 deterministic pre-routing으로 지연을 줄일 수 있다.
 
 ## Metrics
