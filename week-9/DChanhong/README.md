@@ -225,14 +225,6 @@ embedding model: text-embedding-3-small
 - 제출용 trace에는 개인정보가 없는 예시 입력만 사용한다.
 - RAG 문서 전문, API key, 로컬 `.env` 값은 README에 붙이지 않는다.
 
-## 고도화 평가
-
-| 평가 항목 | 구현 여부 | 결과 |
-|-----------|-----------|------|
-| correctness | 미구현 | trace 수동 분석으로 대체 |
-| groundedness | 미구현 | Tool observation 기반 답변 여부를 수동 확인 |
-| tool completeness | 미구현 | 정상/실패 골든 trace에서 수동 확인 |
-
 ## 배운 점
 
 - 최종 답변만 저장하면 Agent가 어떤 근거로 답했는지 확인하기 어렵고, Tool argument와 observation이 함께 있어야 문제 원인을 추적할 수 있다.
