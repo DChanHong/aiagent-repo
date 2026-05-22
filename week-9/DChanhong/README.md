@@ -3,10 +3,10 @@
 ## 프로젝트 링크
 
 - Repository: https://github.com/DChanHong/baseball-agent
-  - Agent 본체 코드(`AgentExecutor` 설정, Tool 정의, prompt 등)와 observability 관련 모듈이 모두 이 외부 repo에 있다.
-  - 본 README는 aiagent-repo 안의 제출용 요약본이고, 실제 실행 코드와 trace 샘플 JSON은 위 repository에서 확인한다.
+  - Agent 본체 코드(`AgentExecutor` 설정, Tool 정의, prompt 등)와 observability 관련 모듈이 모두 이 외부 repo에 있습니다.
+  - 본 README는 aiagent-repo 안의 제출용 요약본이고, 실제 실행 코드와 trace 샘플 JSON은 위 repository에서 확인합니다.
 - 7주차 제출 README: https://github.com/DChanHong/baseball-agent/blob/main/README.md
-  - 7주차 Agent 구성(Tool 목록, 실행 흐름, 설치 방법)이 그대로 유지돼 있어 본 README의 "Agent 실행 흐름" 섹션과 함께 보면 충분하다.
+  - 7주차 Agent 구성(Tool 목록, 실행 흐름, 설치 방법)이 그대로 유지돼 있어 본 README의 "Agent 실행 흐름" 섹션과 함께 보면 충분합니다.
 
 ## 구현한 Observability
 
@@ -51,7 +51,7 @@
 
 LangSmith trace (public): https://smith.langchain.com/public/d2bffe6d-b4b7-4305-8c38-7d0911513571/r
 
-> 위 링크는 별도 로그인 없이 열람 가능한 public share link이다. 링크를 열면 좌측에 step tree(LLM call → `find_kbo_game` tool call → 최종 답변), 우측에 각 step의 input/output/latency가 표시된다. 아래 표는 그 trace를 요약한 것이므로 링크 접근이 어려운 경우 README만으로도 동일 정보를 확인할 수 있다.
+> 위 링크는 별도 로그인 없이 열람 가능한 public share link입니다. 링크를 열면 좌측에 step tree(LLM call → `find_kbo_game` tool call → 최종 답변), 우측에 각 step의 input/output/latency가 표시됩니다. 아래 표는 그 trace를 요약한 것이므로 링크 접근이 어려운 경우 README만으로도 동일 정보를 확인할 수 있습니다.
 
 입력:
 
@@ -78,20 +78,20 @@ Trace 정보:
 최종 답변 요약:
 
 ```text
-다음주 롯데 후보 경기 6개를 제시하고, 어떤 경기를 더 자세히 볼지 추가 선택을 요청했다.
+다음주 롯데 후보 경기 6개를 제시하고, 어떤 경기를 더 자세히 볼지 추가 선택을 요청했습니다.
 ```
 
 분석:
 
-- 경기 일정은 RAG가 아니라 `find_kbo_game`의 deterministic lookup으로 처리됐다.
-- 후보 경기 수가 6개로 반환됐다.
-- 구장, 날씨, RAG, 좌석 점수화 Tool은 호출되지 않았다.
+- 경기 일정은 RAG가 아니라 `find_kbo_game`의 deterministic lookup으로 처리됐습니다.
+- 후보 경기 수가 6개로 반환됐습니다.
+- 구장, 날씨, RAG, 좌석 점수화 Tool은 호출되지 않았습니다.
 
 ## 정상 케이스 Trace 2: 좌석 추천
 
 LangSmith trace (public): https://smith.langchain.com/public/abc17a63-9c35-4f63-9f4b-0fca47a54342/r
 
-> 5단계 tool 호출이 직렬로 이어지는 trace이므로, 링크에서는 step tree가 깊게 펼쳐진다. 각 tool node를 클릭하면 argument와 observation 전문을 볼 수 있고, 우측 상단에서 전체 latency 23564ms와 token 사용량을 확인할 수 있다. 아래 표는 같은 정보를 한눈에 정리한 요약본이다.
+> 5단계 tool 호출이 직렬로 이어지는 trace이므로, 링크에서는 step tree가 깊게 펼쳐집니다. 각 tool node를 클릭하면 argument와 observation 전문을 볼 수 있고, 우측 상단에서 전체 latency 23564ms와 token 사용량을 확인할 수 있습니다. 아래 표는 같은 정보를 한눈에 정리한 요약본입니다.
 
 입력:
 
@@ -126,15 +126,15 @@ Trace 정보:
 
 ```text
 2026-05-23 사직 롯데-삼성 경기 기준으로 맑은 날씨와 비돔 구장 조건을 설명하고,
-가성비와 롯데 응원 선호를 반영해 1루내야상단석을 우선 추천했다.
-좌석 가격은 크롤링 시점 기준이며 실시간 잔여석을 반영하지 않는다는 한계를 함께 안내했다.
+가성비와 롯데 응원 선호를 반영해 1루내야상단석을 우선 추천했습니다.
+좌석 가격은 크롤링 시점 기준이며 실시간 잔여석을 반영하지 않는다는 한계를 함께 안내했습니다.
 ```
 
 분석:
 
-- 단일턴 입력에서 경기 확정, 구장 조회, 날씨 조회, RAG 검색, 좌석 점수화가 모두 실행됐다.
-- 좌석 추천 답변은 `score_seat_candidates` observation 이후에 생성됐다.
-- tool latency 기준 병목은 `get_weather_context` 2123ms였고, 전체 latency에는 LLM reasoning 시간이 크게 포함됐다.
+- 단일턴 입력에서 경기 확정, 구장 조회, 날씨 조회, RAG 검색, 좌석 점수화가 모두 실행됐습니다.
+- 좌석 추천 답변은 `score_seat_candidates` observation 이후에 생성됐습니다.
+- tool latency 기준 병목은 `get_weather_context` 2123ms였고, 전체 latency에는 LLM reasoning 시간이 크게 포함됐습니다.
 
 ## 실패 또는 예외 케이스 Trace
 
@@ -146,7 +146,7 @@ Trace 정보:
 
 LangSmith trace (public): https://smith.langchain.com/public/a02885f9-982f-410d-a7db-e7818dc1f042/r
 
-> 링크를 열면 `find_kbo_game` tool node의 output에 `ok=false`, `status=not_found`, `error.code=GAME_NOT_FOUND`가 그대로 노출돼 있다. 후속 tool node가 존재하지 않고 곧바로 최종 답변 node로 이어지므로, Agent가 실패를 감지한 뒤 추가 호출 없이 종료했음을 trace tree에서 시각적으로 확인할 수 있다.
+> 링크를 열면 `find_kbo_game` tool node의 output에 `ok=false`, `status=not_found`, `error.code=GAME_NOT_FOUND`가 그대로 노출돼 있습니다. 후속 tool node가 존재하지 않고 곧바로 최종 답변 node로 이어지므로, Agent가 실패를 감지한 뒤 추가 호출 없이 종료했음을 trace tree에서 시각적으로 확인할 수 있습니다.
 
 실행 요약:
 
@@ -166,21 +166,21 @@ Trace 정보:
 
 실패 처리:
 
-- 경기 확정에 실패한 뒤 `get_stadium_info`, `get_weather_context`, `search_baseball_knowledge`, `score_seat_candidates`를 호출하지 않았다.
-- Agent 실행 자체는 실패하지 않고 정상 종료됐다.
-- 최종 답변은 해당 날짜에 롯데 경기를 찾을 수 없으니 다른 날짜나 조건을 입력해 달라는 fallback 성격으로 생성됐다.
+- 경기 확정에 실패한 뒤 `get_stadium_info`, `get_weather_context`, `search_baseball_knowledge`, `score_seat_candidates`를 호출하지 않았습니다.
+- Agent 실행 자체는 실패하지 않고 정상 종료됐습니다.
+- 최종 답변은 해당 날짜에 롯데 경기를 찾을 수 없으니 다른 날짜나 조건을 입력해 달라는 fallback 성격으로 생성됐습니다.
 
 ## Trace 분석
 
-- 예상한 흐름: 일정 조회는 `find_kbo_game`만 호출하고, 좌석 추천은 경기 확정 후 구장 정보, 날씨, RAG 검색, 좌석 점수화 순서로 진행해야 한다.
-- 실제 흐름: 일정 조회, 좌석 추천, 실패 케이스 모두 예상 흐름과 일치했다.
-- 누락된 Tool: 세 trace 모두에서 예상 흐름 대비 누락된 Tool은 없었다. 일정 조회와 실패 케이스는 단일 Tool만 필요한 흐름이라 후속 Tool 미호출이 정상 동작이고, 좌석 추천은 구장→날씨→RAG→점수화 5개 Tool이 모두 호출됐다.
-- Tool argument 구체성: `find_kbo_game`은 `team_query=롯데`, `date_query=다음주`처럼 사용자 발화의 모호한 표현도 그대로 인자로 전달돼 Tool 내부에서 날짜 범위로 정규화됐다. 좌석 추천 trace에서는 `score_seat_candidates`가 선호도, 날씨 context, 좌석 후보, 경기 정보를 모두 받아 점수화에 필요한 인자가 빠짐없이 전달됐다. 인자 부족으로 인한 재호출이나 빈 인자 호출은 관측되지 않았다.
-- 반복 호출 여부: 세 trace 모두에서 동일 Tool을 동일 인자로 다시 호출하는 불필요한 반복은 없었다. 좌석 추천 trace의 5단계도 각 Tool이 정확히 1회씩만 호출됐다.
-- Fallback 동작: 실패 케이스에서 `find_kbo_game`이 `status=not_found`, `error.code=GAME_NOT_FOUND`를 반환하자 Agent는 후속 Tool을 호출하지 않고 사용자에게 다른 날짜를 요청하는 답변으로 정상 종료(`stop reason=final_answer`)했다.
-- Latency 병목: 좌석 추천 trace의 tool latency 합계는 약 3141ms인데 전체 latency는 23564ms로, 차이의 대부분이 LLM reasoning 시간이다. Tool 단위로는 `get_weather_context` 2123ms와 `search_baseball_knowledge` 999ms가 컸다.
-- 답변 groundedness: 세 trace 모두 최종 답변이 직전 Tool observation 범위 내 정보로만 구성됐다. 좌석 추천 답변의 경기/구장/날씨/좌석 1순위는 각각 `find_kbo_game`, `get_stadium_info`, `get_weather_context`, `score_seat_candidates` observation에서 그대로 가져왔고, 가격이 크롤링 시점 기준이라는 한계 안내도 RAG 문서 근거 범위 안에 있다. Tool 결과를 벗어난 hallucination은 관측되지 않았다.
-- 개선할 부분: 좌석 추천 trace의 전체 latency 23564ms 중 tool latency 합계보다 LLM reasoning 시간이 더 크므로, prompt 축약이나 deterministic pre-routing으로 지연을 줄일 수 있다.
+- 예상한 흐름: 일정 조회는 `find_kbo_game`만 호출하고, 좌석 추천은 경기 확정 후 구장 정보, 날씨, RAG 검색, 좌석 점수화 순서로 진행해야 합니다.
+- 실제 흐름: 일정 조회, 좌석 추천, 실패 케이스 모두 예상 흐름과 일치했습니다.
+- 누락된 Tool: 세 trace 모두에서 예상 흐름 대비 누락된 Tool은 없었습니다. 일정 조회와 실패 케이스는 단일 Tool만 필요한 흐름이라 후속 Tool 미호출이 정상 동작이고, 좌석 추천은 구장→날씨→RAG→점수화 5개 Tool이 모두 호출됐습니다.
+- Tool argument 구체성: `find_kbo_game`은 `team_query=롯데`, `date_query=다음주`처럼 사용자 발화의 모호한 표현도 그대로 인자로 전달돼 Tool 내부에서 날짜 범위로 정규화됐습니다. 좌석 추천 trace에서는 `score_seat_candidates`가 선호도, 날씨 context, 좌석 후보, 경기 정보를 모두 받아 점수화에 필요한 인자가 빠짐없이 전달됐습니다. 인자 부족으로 인한 재호출이나 빈 인자 호출은 관측되지 않았습니다.
+- 반복 호출 여부: 세 trace 모두에서 동일 Tool을 동일 인자로 다시 호출하는 불필요한 반복은 없었습니다. 좌석 추천 trace의 5단계도 각 Tool이 정확히 1회씩만 호출됐습니다.
+- Fallback 동작: 실패 케이스에서 `find_kbo_game`이 `status=not_found`, `error.code=GAME_NOT_FOUND`를 반환하자 Agent는 후속 Tool을 호출하지 않고 사용자에게 다른 날짜를 요청하는 답변으로 정상 종료(`stop reason=final_answer`)했습니다.
+- Latency 병목: 좌석 추천 trace의 tool latency 합계는 약 3141ms인데 전체 latency는 23564ms로, 차이의 대부분이 LLM reasoning 시간입니다. Tool 단위로는 `get_weather_context` 2123ms와 `search_baseball_knowledge` 999ms가 컸습니다.
+- 답변 groundedness: 세 trace 모두 최종 답변이 직전 Tool observation 범위 내 정보로만 구성됐습니다. 좌석 추천 답변의 경기/구장/날씨/좌석 1순위는 각각 `find_kbo_game`, `get_stadium_info`, `get_weather_context`, `score_seat_candidates` observation에서 그대로 가져왔고, 가격이 크롤링 시점 기준이라는 한계 안내도 RAG 문서 근거 범위 안에 있습니다. Tool 결과를 벗어난 hallucination은 관측되지 않았습니다.
+- 개선할 부분: 좌석 추천 trace의 전체 latency 23564ms 중 tool latency 합계보다 LLM reasoning 시간이 더 크므로, prompt 축약이나 deterministic pre-routing으로 지연을 줄일 수 있습니다.
 
 ## Metrics
 
@@ -193,9 +193,9 @@ Trace 정보:
 
 ## 실제 관측 로그 샘플
 
-LangSmith trace와 별도로, 리뷰어가 repository 안에서 바로 확인할 수 있도록 실제 `/chat` 실행 결과를 JSON 샘플로 저장했다.
+LangSmith trace와 별도로, 리뷰어가 repository 안에서 바로 확인할 수 있도록 실제 `/chat` 실행 결과를 JSON 샘플로 저장했습니다.
 
-> 아래 경로들은 모두 외부 repository(`https://github.com/DChanHong/baseball-agent`) 기준이다. 본 aiagent-repo에는 포함돼 있지 않으므로, 파일을 직접 열어보려면 외부 repo의 `docs/observability/examples/` 디렉터리로 이동해야 한다. 다만 각 파일의 핵심 내용은 본 README의 trace 표에 이미 요약돼 있어, 외부 파일을 열지 않아도 평가에 필요한 정보는 확인할 수 있다.
+> 아래 경로들은 모두 외부 repository(`https://github.com/DChanHong/baseball-agent`) 기준입니다. 본 aiagent-repo에는 포함돼 있지 않으므로, 파일을 직접 열어보려면 외부 repo의 `docs/observability/examples/` 디렉터리로 이동해야 합니다. 다만 각 파일의 핵심 내용은 본 README의 trace 표에 이미 요약돼 있어, 외부 파일을 열지 않아도 평가에 필요한 정보는 확인할 수 있습니다.
 
 | 항목 | 파일 | 포함 내용 요약 |
 |------|------|----------------|
@@ -229,15 +229,15 @@ embedding model: text-embedding-3-small
 
 ## 민감정보 처리
 
-- `.env`, API key, LangSmith API key는 commit하지 않는다.
-- LangSmith metadata에는 전체 `user_context`를 저장하지 않고 `selected_game_id`, `selected_stadium_id`, 후보 경기 수처럼 재현에 필요한 요약값만 남긴다.
-- Tool argument masking 규칙에서 `api_key`, `token`, `password`, `secret`, `payment_info`, `phone`, `email`, `address`는 `[excluded]`로 기록한다.
-- `origin` 값이 긴 문자열이면 앞 2글자만 남기고 나머지는 마스킹한다.
-- 제출용 trace에는 개인정보가 없는 예시 입력만 사용한다.
-- RAG 문서 전문, API key, 로컬 `.env` 값은 README에 붙이지 않는다.
+- `.env`, API key, LangSmith API key는 commit하지 않습니다.
+- LangSmith metadata에는 전체 `user_context`를 저장하지 않고 `selected_game_id`, `selected_stadium_id`, 후보 경기 수처럼 재현에 필요한 요약값만 남깁니다.
+- Tool argument masking 규칙에서 `api_key`, `token`, `password`, `secret`, `payment_info`, `phone`, `email`, `address`는 `[excluded]`로 기록합니다.
+- `origin` 값이 긴 문자열이면 앞 2글자만 남기고 나머지는 마스킹합니다.
+- 제출용 trace에는 개인정보가 없는 예시 입력만 사용합니다.
+- RAG 문서 전문, API key, 로컬 `.env` 값은 README에 붙이지 않습니다.
 
 ## 배운 점
 
-- 최종 답변만 저장하면 Agent가 어떤 근거로 답했는지 확인하기 어렵고, Tool argument와 observation이 함께 있어야 문제 원인을 추적할 수 있다.
-- 일정 조회처럼 정확성이 중요한 단계는 RAG보다 구조화된 JSON lookup이 더 적합했다.
-- 좌석 추천처럼 여러 Tool을 거치는 흐름은 tool latency와 전체 latency를 함께 봐야 병목을 제대로 구분할 수 있다.
+- 최종 답변만 저장하면 Agent가 어떤 근거로 답했는지 확인하기 어렵고, Tool argument와 observation이 함께 있어야 문제 원인을 추적할 수 있습니다.
+- 일정 조회처럼 정확성이 중요한 단계는 RAG보다 구조화된 JSON lookup이 더 적합했습니다.
+- 좌석 추천처럼 여러 Tool을 거치는 흐름은 tool latency와 전체 latency를 함께 봐야 병목을 제대로 구분할 수 있습니다.
