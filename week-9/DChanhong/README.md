@@ -221,12 +221,6 @@ logistics_guide: 7
 embedding model: text-embedding-3-small
 ```
 
-로컬 샘플 생성 명령:
-
-```bash
-.venv313/bin/python scripts/generate_observability_examples.py
-```
-
 ## 민감정보 처리
 
 - `.env`, API key, LangSmith API key는 commit하지 않습니다.
@@ -238,6 +232,7 @@ embedding model: text-embedding-3-small
 
 ## 배운 점
 
-- 최종 답변만 저장하면 Agent가 어떤 근거로 답했는지 확인하기 어렵고, Tool argument와 observation이 함께 있어야 문제 원인을 추적할 수 있습니다.
-- 일정 조회처럼 정확성이 중요한 단계는 RAG보다 구조화된 JSON lookup이 더 적합했습니다.
-- 좌석 추천처럼 여러 Tool을 거치는 흐름은 tool latency와 전체 latency를 함께 봐야 병목을 제대로 구분할 수 있습니다.
+1. 최종 답변만 저장하면 Agent의 판단 근거를 알기 어렵고, Tool argument와 observation을 같이 남겨야 문제 원인까지 역추적할 수 있었습니다.
+2. step별 latency를 따로 기록하니 전체 latency 중 LLM reasoning과 tool I/O 중 어느 쪽이 병목인지 한눈에 구분됐습니다(예: 좌석 추천 trace는 tool 합계 3141ms vs 전체 23564ms).
+3. 정상 케이스만 보면 멀쩡해 보이는 흐름도 실패 케이스 trace를 함께 두니 "어디서 멈춰야 하는가"를 더 정확히 검증할 수 있었습니다.
+4. prompt version을 trace에 함께 기록해두니 답변 품질이 흔들렸을 때 "prompt가 바뀌었는지 / 모델이 흔들렸는지"를 빠르게 가를 수 있었습니다.
